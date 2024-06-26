@@ -1,0 +1,121 @@
+import random
+import sys
+class MartianDice:
+    def __init__(self):
+        self.player_score = 0
+        self.bot_score = 0
+        self.dice_pool = [1, 1, 1, 2, 3, 4, 5, 6]  # 1 = Человек, 2 = Корова, 3 = Кура-гриль, 4 = Танк, 5 = Луч смерти(летающая тарелка), 6 = Также смерти луч  
+
+    def roll_dice(self):
+        """Rolls the dice in the pool."""
+        rolls = []
+        for _ in range(len(self.dice_pool)):
+            roll = random.choice(self.dice_pool)
+            rolls.append(roll)
+        return rolls
+
+    def choose_species(self, rolls):
+        """Bot chooses a species and tanks to keep, returns updated rolls."""
+        species_counts = {1: 0, 2: 0, 3: 0, 4: 0}
+        for roll in rolls:
+            species_counts[roll] += 1
+        
+        # Выбор видов с наибольшим кол-вом представителей
+        chosen_species = max(species_counts, key=species_counts.get)
+        
+       #Пока хз пригодиться нет утром решить
+       # num_tanks = min(species_counts[4], 3 - self.player_score // 10)  
+        
+        # Убираем танки из попыток
+        for _ in range(species_counts[chosen_species]):
+            rolls.remove(chosen_species)
+        for _ in range(num_tanks):
+            rolls.remove(4)
+        
+        return rolls, chosen_species, num_tanks
+
+    def calculate_score(self, chosen_species, num_tanks):
+        """Calculates the score for a round."""
+        species_counts = {1: 0, 2: 0, 3: 0}
+        for roll in self.dice_pool:
+            species_counts[roll] += 1
+        
+        score = sum(species_counts.values())
+        if species_counts[1] > 0 and species_counts[2] > 0 and species_counts[3] > 0:
+            score += 3
+
+        return score
+
+    def play_round(self, player=True):
+        """Plays a round of the game."""
+        rolls = self.roll_dice()
+        print(f"{'Player' if player else 'Bot'} rolled: {rolls}")
+
+        if player:
+            # Ход игрока (пока просто случайным образом для демонстрации)
+            while True:
+                sys.stdin.reconfigure(encoding='utf-8')  
+                choice = input("Выберите вид для захвата (1 = Человек, 2 = Корова, 3 = Кура) или 'пас': ")
+                if choice.isdigit() and int(choice) in [1, 2, 3]:
+                    chosen_species = int(choice)
+                    break
+                elif choice.lower() == 'пас':
+                    chosen_species = None
+                    break
+                else:
+                    print("Неверный выбор. Пожалуйста, введи 1, 2, 3 или 'пас'.")
+
+            if chosen_species:
+                # Удалить выбранные виды и танки (игрок выбирает сам)
+                while True:
+                    num_tanks = int(input("Сколько танков осталось (0-3)? "))
+                    if 0 <= num_tanks <= 3:
+                        break
+                    else:
+                        print("Неверное количество танков. Пожалуйста, введи 0, 1, 2 или 3.")
+                
+                for _ in range(species_counts[chosen_species]):
+                    rolls.remove(chosen_species)
+                for _ in range(num_tanks):
+                    rolls.remove(4)
+
+                self.dice_pool = rolls
+                print(f"{'Player' if player else 'Bot'} keeps: {chosen_species}, {num_tanks} tanks")
+                print(f"{'Player' if player else 'Bot'} dice remaining: {self.dice_pool}")
+
+            # Попытки игрока окончены
+            else:
+                print(f"{'Player' if player else 'Bot'} stops rolling")
+        else:
+            # Ход бота 
+            rolls, chosen_species, num_tanks = self.choose_species(rolls)
+            self.dice_pool = rolls
+            print(f"Bot keeps: {chosen_species}, {num_tanks} tanks")
+            print(f"Bot dice remaining: {self.dice_pool}")
+
+        if player:
+            self.player_score = self.calculate_score(chosen_species, num_tanks)
+        else:
+            self.bot_score = self.calculate_score(chosen_species, num_tanks)
+        print(f"{'Player' if player else 'Bot'} score: {self.player_score if player else self.bot_score}")
+
+    def play_game(self):
+        """Plays a full game of Martian Dice."""
+        while self.player_score < 25 and self.bot_score < 25:
+            print("---------------------")
+            self.play_round(player=True)
+            print("---------------------")
+            self.play_round(player=False)
+            print("---------------------")
+            print(f"Очки игрока: {self.player_score}")
+            print(f"Очки бота: {self.bot_score}")
+            print("---------------------")
+
+        if self.player_score >= 25:
+            print("Игрок победил!")
+        else:
+            print("Бот победил!")
+
+# Начало игры
+game = MartianDice()
+game.play_game()
