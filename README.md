@@ -1,2 +1,2 @@
 # Martian-Dice-summer-practical
-need to fix but major part is done
+step 1 is done
