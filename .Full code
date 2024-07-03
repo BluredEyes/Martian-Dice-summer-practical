@@ -1,0 +1,165 @@
+import random
+
+def ai_turn():
+    """
+    AI's turn logic.
+    """
+    dice = [1, 2, 3, 4, 5, 6] * 13
+    rolls = random.choices(dice, k=13)
+    tank_count = rolls.count(4)
+    rolls = [x for x in rolls if x != 4]
+    
+    # AI selects either all faces 5 and 6 or same several faces 1 2 or 3
+    if rolls.count(5) + rolls.count(6) >= rolls.count(1) + rolls.count(2) + rolls.count(3):
+        selected_faces = [5, 6]
+    else:
+        selected_faces = [1, 2, 3]
+    
+    # Roll the remaining dice
+    rolls = [x for x in rolls if x in selected_faces]
+    rolls = random.choices(rolls, k=len(rolls))
+    
+    # Calculate score
+    score = 0
+    if tank_count <= rolls.count(5) + rolls.count(6):
+        for face in [1, 2, 3]:
+            score += rolls.count(face)
+        if rolls.count(1) > 0 and rolls.count(2) > 0 and rolls.count(3) > 0:
+            score += 3
+    
+    return score
+import json
+from random import randint
+class Dice():
+    SIDES = [1, 2, 3, 4, 5, 6]
+    def __init__(self, side=None):
+        if side != None and 1 <= side <= 6:
+            self.current_side = side
+        else:
+            self.roll()
+
+    def __repr__(self):
+        return str(self.current_side)
+
+    def roll(self):
+        self.current_side = self.SIDES[randint(0, 5)]
+
+    def save(self):
+        with open('data1.json', 'w') as file:
+            json.dump({"current_side":self.current_side}, file)
+        return repr(self)
+
+    @classmethod
+    def load(cls, value: str):
+        with open('data1.json', 'r') as file:
+            s = json.load(file)
+        return cls(s["current_side"])
+from dataclasses import dataclass
+
+@dataclass
+class GameInteractions:
+    def run(self):
+        pass
+
+    def load(self, json):
+        pass
+
+    def request_players(self) -> list['Player']:
+        pass
+
+    def print_rolled_dice(self, dices: list['Dice']):
+        pass
+
+    def print_side_dice(self, dices: list['Dice']):
+        pass
+
+    def print_player_info(self, player: 'Player'):
+        pass
+
+from dataclasses import dataclass
+from typing import List
+
+@dataclass
+class GameState:
+    players: List['Player']
+    current_player: int
+    rolled_dice: List['Dice']
+    side_dice: List['Dice']
+
+    def next_player(self):
+        self.current_player = (self.current_player + 1) % len(self.players)
+
+    def side_dices(self, side: str):
+        return [dice for dice in self.side_dice if dice.side == side]
+
+    def score(self) -> int:
+        # Implement score calculation logic
+        pass
+
+    def save(self) -> str:
+        # Implement saving logic
+        pass
+
+    def load(self, json: str):
+        # Implement loading logic
+        pass
+class PlayerInteractions:
+    def choose_dices(self, rolled, side, score, other_scores):
+        return side
+
+class Human(PlayerInteractions):
+    def choose_dices(self, rolled, side, score, other_scores):
+        return super().choose_dices(rolled, side, score, other_scores)
+from dataclasses import dataclass
+from typing import List
+
+@dataclass
+class Player:
+    name: str
+    score: int
+    type: "PlayerInteraction"
+
+    def choose_dices(self, available_dices: List[int], num_dices: int) -> List[int]:
+        """
+        Choose dices to roll.
+
+        Args:
+            available_dices: List of available dices to choose from.
+            num_dices: Number of dices to choose.
+
+        Returns:
+            List of chosen dices.
+        """
+        chosen_dices = []
+        while len(chosen_dices) < num_dices:
+            dice = input(f"Choose a dice from {available_dices}: ")
+            if dice in available_dices:
+                chosen_dices.append(dice)
+                available_dices.remove(dice)
+            else:
+                print("Invalid dice choice.")
+        return chosen_dices
+
+    def save(self) -> str:
+        """
+        Save player data to JSON.
+
+        Returns:
+            JSON string representing player data.
+        """
+        return {
+            "name": self.name,
+            "score": self.score,
+            "type": self.type.value
+        }
+
+    def load(self, json: str):
+        """
+        Load player data from JSON.
+
+        Args:
+            json: JSON string representing player data.
+        """
+        self.name = json["name"]
+        self.score = json["score"]
+        self.type = PlayerInteraction(json["type"])
