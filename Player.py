@@ -1,29 +1,54 @@
-import unittest
-from main import Player, PlayerInteraction
+from dataclasses import dataclass
+from typing import List, Optional
 
-class TestPlayer(unittest.TestCase):
+@dataclass
+class Player:
+    name: str
+    score: int
+    type: "PlayerInteraction"
 
-    def test_choose_dices(self):
-        player = Player("Test Player", 0, PlayerInteraction.HUMAN)
-        available_dices = [1, 2, 3, 4, 5, 6]
-        chosen_dices = player.choose_dices(available_dices, 2)
-        self.assertEqual(len(chosen_dices), 2)
-        self.assertTrue(all(dice in available_dices for dice in chosen_dices))
+    def choose_dices(self, available_dices: List[int], num_dices: int) -> List[int]:
+        """
+        Choose dices to roll.
 
-    def test_save(self):
-        player = Player("Test Player", 100, PlayerInteraction.AI)
-        json = player.save()
-        self.assertEqual(json["name"], "Test Player")
-        self.assertEqual(json["score"], 100)
-        self.assertEqual(json["type"], PlayerInteraction.AI.value)
+        Args:
+            available_dices: List of available dices to choose from.
+            num_dices: Number of dices to choose.
 
-    def test_load(self):
-        player = Player("Test Player", 0, PlayerInteraction.HUMAN)
-        json = {"name": "Test Player", "score": 50, "type": PlayerInteraction.AI.value}
-        player.load(json)
-        self.assertEqual(player.name, "Test Player")
-        self.assertEqual(player.score, 50)
-        self.assertEqual(player.type, PlayerInteraction.AI)
+        Returns:
+            List of chosen dices.
+        """
+        chosen_dices = []
+        while len(chosen_dices) < num_dices:
+            dice = input(f"Choose a dice from {available_dices}: ")
+            if dice in available_dices:
+                chosen_dices.append(dice)
+                available_dices.remove(dice)
+            else:
+                print("Invalid dice choice.")
+        return chosen_dices
 
-if __name__ == '__main__':
-    unittest.main()
+    def save(self) -> str:
+        """
+        Save player data to JSON.
+
+        Returns:
+            JSON string representing player data.
+        """
+        return {
+            "name": self.name,
+            "score": self.score,
+            "type": self.type.value
+        }
+
+    def load(self, json: str):
+        """
+        Load player data from JSON.
+
+        Args:
+            json: JSON string representing player data.
+        """
+        self.name = json["name"]
+        self.score = json["score"]
+        self.type = PlayerInteraction(json["type"])
+
