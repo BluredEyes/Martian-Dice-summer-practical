@@ -1,8 +1,7 @@
-class PlayerInteractions #pink/white {
-  choose_dices([rolled], [side], score, other_scores) -> str{side}
-}
+class PlayerInteractions:
+    def choose_dices(self, rolled, side, score, other_scores):
+        return side
 
-class Human #pink {
-  choose_dices([rolled], [side], score, other_scores) -> str{side}
-}
-Human <|-- PlayerInteractions
+class Human(PlayerInteractions):
+    def choose_dices(self, rolled, side, score, other_scores):
+        return super().choose_dices(rolled, side, score, other_scores)
