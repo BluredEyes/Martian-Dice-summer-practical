@@ -1,4 +1,4 @@
-import random
+import random ##Нe пашет :( разобраться
 
 def ai_turn():
     """
