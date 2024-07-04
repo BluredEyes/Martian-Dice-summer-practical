@@ -1,94 +1,96 @@
- ## Ураа он пашет,но засыпаю,продолжаем разработку завтра надо доделать с json из выбора сторон убрать 0 и оптимизировать крутки кибика
+ ## Ураа он пашет,но я засыпаю,продолжаем разработку, завтра надо доделать с json оптимизировать крутки кибика чтобы при 2 оставшихся кбках он не играл до бесконечности а уменьшал до 1 кубика и до 0 и заканчивал код
 import random
 import json
 
 class DiceGame:
     def __init__(self):
-        self.dice_sides = [1, 2, 3, 4, 5, 6]
-        self.num_dice = 13
+        self.dice_count = 13
         self.player_score = 0
         self.ai_score = 0
         self.player_moves = []
         self.ai_moves = []
-        self.game_over = False
+        self.tanks = []
+        self.death_rays = []
 
     def roll_dice(self):
-        return [random.choice(self.dice_sides) for _ in range(self.num_dice)]
+        """Rolls all the dice and returns the results."""
+        results = []
+        for _ in range(self.dice_count):
+            result = random.randint(1, 6)
+            results.append(result)
+            if result == 4:
+                self.tanks.append(result)
+        return results
 
-    def count_sides(self, dice_roll):
-        side_counts = {}
-        for side in self.dice_sides:
-            side_counts[side] = dice_roll.count(side)
-        return side_counts
-
-    def player_turn(self, dice_roll, side_counts):
-        print("Dice Roll:", dice_roll)
-        print("Side Counts:", side_counts)
-        while True:
-            choice = input("Choose a side (1, 2, 3, 5, or 6): ")
-            if choice in ["1", "2", "3", "5", "6"]:
-                break
-            else:
-                print("Invalid choice. Please choose 1, 2, 3, 5, or 6.")
-
+    def player_turn(self, results):
+        """Handles the player's turn."""
+        print("Dice Results:", results)
+        self.tanks = [result for result in results if result == 4]
+        print("Tanks:", self.tanks)
+        print("Choose a side (1, 2, 3, 5, or 6):")
+        choice = input()
         self.player_moves.append(choice)
-        self.num_dice -= side_counts[int(choice)]
-        if choice in ["1", "2", "3"]:
-            self.player_score += side_counts[int(choice)]
-            if side_counts[1] and side_counts[2] and side_counts[3]:
+
+        if choice in ['1', '2', '3']:
+            self.player_score += results.count(int(choice))
+            if results.count(1) and results.count(2) and results.count(3):
                 self.player_score += 3
-        else:
-            self.ai_score += side_counts[int(choice)]
+        elif choice in ['5', '6']:
+            self.death_rays.extend([result for result in results if result in [5, 6]])
 
-    def ai_turn(self, dice_roll, side_counts):
-        print("AI's Turn...")
-        # Implement AI logic to choose a side based on strategy
-        # (You can use a simple strategy like choosing the side with the most occurrences)
-        ai_choice = str(max(side_counts, key=side_counts.get))
-        self.ai_moves.append(ai_choice)
-        self.num_dice -= side_counts[int(ai_choice)]
-        if ai_choice in ["1", "2", "3"]:
-            self.ai_score += side_counts[int(ai_choice)]
-            if side_counts[1] and side_counts[2] and side_counts[3]:
+        results = [result for result in results if str(result) != choice]
+        self.dice_count = len(results)
+
+    def ai_turn(self, results):
+        """Handles the AI's turn."""
+        print("AI Dice Results:", results)
+        self.tanks = [result for result in results if result == 4]
+        print("AI Tanks:", self.tanks)
+
+        # AI decision logic (replace with your desired strategy)
+        choice = random.choice(['1', '2', '3', '5', '6'])
+        self.ai_moves.append(choice)
+
+        if choice in ['1', '2', '3']:
+            self.ai_score += results.count(int(choice))
+            if results.count(1) and results.count(2) and results.count(3):
                 self.ai_score += 3
-        else:
-            self.ai_score += side_counts[int(ai_choice)]
+        elif choice in ['5', '6']:
+            self.death_rays.extend([result for result in results if result in [5, 6]])
 
-    def check_game_over(self, side_counts):
-        if self.num_dice == 0:
-            self.game_over = True
-            print("Game Over!")
-            print("Player Score:", self.player_score)
-            print("AI Score:", self.ai_score)
-            if self.player_score > self.ai_score:
-                print("Player Wins!")
-            elif self.ai_score > self.player_score:
-                print("AI Wins!")
-            else:
-                print("It's a tie!")
+        results = [result for result in results if str(result) != choice]
+        self.dice_count = len(results)
+
+    def calculate_scores(self):
+        """Calculates final scores and determines the winner."""
+        if sum(self.tanks) > sum(self.death_rays):
+            print("Player wins! No points for AI.")
+            self.ai_score = 0
+        else:
+            print("AI wins!")
+
+        print("Player Score:", self.player_score)
+        print("AI Score:", self.ai_score)
 
     def play_game(self):
-        while not self.game_over:
-            dice_roll = self.roll_dice()
-            side_counts = self.count_sides(dice_roll)
-            if side_counts[4] > side_counts[5] + side_counts[6]:
-                print("AI Wins! Tank side beat Death Ray side.")
-                self.game_over = True
-            elif side_counts[4] <= side_counts[5] + side_counts[6]:
-                self.player_turn(dice_roll, side_counts)
-                self.ai_turn(dice_roll, side_counts)
-                self.check_game_over(side_counts)
-        self.save_results()
+        """Plays the game until the end."""
+        while self.dice_count > 0:
+            results = self.roll_dice()
+            print(f"Dice Count: {self.dice_count}")
+            self.player_turn(results.copy())
+            self.ai_turn(results.copy())
 
-    def save_results(self):
-        results = {
-            "Player Score": self.player_score,
-            "AI Score": self.ai_score,
-            "Player Moves": self.player_moves,
-            "AI Moves": self.ai_moves
+        self.calculate_scores()
+
+        # Save game data to JSON
+        game_data = {
+            "player_score": self.player_score,
+            "ai_score": self.ai_score,
+            "player_moves": self.player_moves,
+            "ai_moves": self.ai_moves
         }
-        with open("game_results.json", "w") as f:
-            json.dump(results, f, indent=4)
+        with open("game_data.json", "w") as f:
+            json.dump(game_data, f, indent=4)
 
 if __name__ == "__main__":
     game = DiceGame()
