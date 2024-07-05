@@ -2,7 +2,7 @@ import random
 import json
 
 class Player:
-    def init(self, name):
+    def __init__(self, name):
         self.name = name
         self.score = 0
         self.tanks = 0
@@ -30,11 +30,11 @@ class Player:
                     print("Invalid choice. Please choose from 1, 2, 3, 5, or 6.")
             except ValueError:
                 print("Invalid input. Please enter a number.")
-        self.selected_faces.extend([choice])
+        self.selected_faces.extend([choice])  # Add the chosen face
         if choice == 5:
-            self.selected_faces.extend([6])
+            self.selected_faces.extend([6])  # Automatically add 6 if 5 is chosen
         elif choice == 6:
-            self.selected_faces.extend([5])
+            self.selected_faces.extend([5])  # Automatically add 5 if 6 is chosen
         return choice
 
     def calculate_score(self, dice, tanks):
@@ -55,7 +55,12 @@ class Player:
         dice = self.roll_dice()
         while len(dice) > 1:
             choice = self.choose_face(dice)
-            dice = [die for die in dice if die not in [choice, 4]]
+            if choice == 5:
+                dice = [die for die in dice if die not in [5, 6, 4]]  # Remove 5 and 6 
+            elif choice == 6:
+                dice = [die for die in dice if die not in [5, 6, 4]]  # Remove 5 and 6
+            else:
+                dice = [die for die in dice if die not in [choice, 4]]
             self.remaining_dice = len(dice)  # Update remaining dice
             print(f"Remaining dice: {self.remaining_dice}")
             dice = self.roll_dice()
@@ -100,5 +105,5 @@ def main():
     else:
         print("AI wins!")
 
-if name == "main":
-    main()
+if __name__ == "__main__":
+    main() 
