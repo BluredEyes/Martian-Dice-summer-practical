@@ -56,7 +56,7 @@ class Player:
         while len(dice) > 1:
             choice = self.choose_face(dice)
             if choice == 5:
-                dice = [die for die in dice if die not in [5, 6, 4]]  # Remove 5 and 6 
+                dice = [die for die in dice if die not in [5, 6, 4]]  # Remove 5 and 6
             elif choice == 6:
                 dice = [die for die in dice if die not in [5, 6, 4]]  # Remove 5 and 6
             else:
@@ -67,6 +67,8 @@ class Player:
 
         self.calculate_score(dice, self.tanks)
         print(f"{self.name}'s score: {self.score}")
+        self.save_data() # Save data after each turn
+        log_turn(self) # Log turn data
 
     def save_data(self):
         data = {
@@ -75,6 +77,13 @@ class Player:
             "tanks": self.tanks,
             "selected_faces": self.selected_faces
         }
+        turn_data = {
+            "roll": self.roll_dice(), # Store the roll for this turn
+            "choices": self.selected_faces, # Store the choices made in this turn
+            "remaining_dice": self.remaining_dice, # Store the remaining dice after each roll
+            "score": self.score # Store the score at the end of the turn
+        }
+        data["turn_data"] = turn_data
         with open("game_data.json", "w") as f:
             json.dump(data, f)
 
@@ -90,15 +99,26 @@ class AI(Player):
             self.selected_faces.extend([5])
         return choice
 
+def log_turn(player):
+    turn_data = {
+        "name": player.name,
+        "roll": player.roll_dice(),
+        "choices": player.selected_faces,
+        "remaining_dice": player.remaining_dice,
+        "score": player.score
+    }
+
+    with open("game_log.json", "a") as f:  # Open in append mode
+        json.dump(turn_data, f)
+        f.write("\n")  # Add a newline to separate turn data
+
 def main():
     player = Player("Player")
     ai = AI("AI")
 
     while player.score < 25 and ai.score < 25:
         player.play_turn()
-        player.save_data()
         ai.play_turn()
-        ai.save_data()
 
     if player.score >= 25:
         print("Player wins!")
@@ -106,4 +126,4 @@ def main():
         print("AI wins!")
 
 if __name__ == "__main__":
-    main() 
+    main()
